@@ -1,11 +1,15 @@
 from pypdf import PdfReader
 import sqlite3 as sql
 import numpy as np
+import DB
 
 import requests
 from nltk.tokenize import word_tokenize
 from nltk.util import bigrams
 import nltk
+
+from src.DB import get_last_id, retrieve_pdf
+
 nltk.download('punkt_tab')
 
 reader = PdfReader("pdfs/PrinciplesofFinance-WEB.pdf")
@@ -64,32 +68,48 @@ def make_vectors(strings):
     print(word_set)
     return vectors
 
-def angleBetweenVectors(vector1, vector2):
-    v1 = np.array(vector1)
-    v2 = np.array(vector2)
+def angle_between_vectors(vector1, vector2):
+    v1 = np.array(vector1);
+    v2 = np.array(vector2);
 
-    dotProduct = np.dot(v1,v2)
-    magnitudeMultiply = np.linalg.norm(v1) * np.linalg.norm(v2)
-    angle_in_rad = np.arccos(dotProduct/magnitudeMultiply)
-    angle_in_degrees = np.degrees(angle_in_rad)
-    return angle_in_degrees
+    dotProduct = np.dot(v1,v2);
+    magnitudeMultiply = np.linalg.norm(v1) * np.linalg.norm(v2);
+    angle_in_rad = np.arccos(dotProduct/magnitudeMultiply);
+    angle_in_degrees = np.degrees(angle_in_rad);
+    return angle_in_degrees;
 
+# creating vectors for each pdf
+def create_vectorsPdfs_with_question(question):
+    pdfTexts = [];
+    for i in range(1,DB.get_last_id()+1):
+        pdfText = "";
+        for page in retrieve_pdf(i):
+            pdfText.append(page);
 
-def createVectorsQuestionWithPdfs(question, pdfs):
-    pdfTexts = []
-    for pdf in pdfs:
+        pdfTexts.append(pdfText);
 
-        # creates a pdf string.
-        pdfText = ""
-        reader = PdfReader(pdf)
-        for page in reader.pages:
-            pdfText += page.extract_text() + " "
+    pdfTexts.append(question);
 
-        pdfTexts.append(pdfText)
-
-    pdfTexts.append(question)
-
-    return make_vectors(pdfTexts)
+    return make_vectors(pdfTexts);
 
 
+#create the vectors for the questions
+def createVectorsPagesWithQuestion(question,pdfIndex):
+    pagesList = [];
+    for page in retrieve_pdf(pdfIndex):
+        pagesList.append(page);
+
+    pagesList.append(question);
+
+    return make_vectors(pagesList);
+
+def checkVectorWithQuestionVector(vectors):
+    minimum = angle_between_vectors(vectors[0], vectors[-1])
+    id = 1
+    for index, vector in enumerate(vectors[1:-1]):
+        if minimum > angle_between_vectors(vector, vectors[-1]):
+            minimum = angle_between_vectors(vector, vectors[-1])
+            id += index + 1
+        else:
+            continue
 
