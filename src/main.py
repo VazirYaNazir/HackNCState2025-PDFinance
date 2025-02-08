@@ -8,18 +8,15 @@ from pathlib import Path
 
 
 #file imports
-import GUI
-import DB
-import pdfreader
 
 
 def main():
-    compile_to_executable()
-
+    #compile_to_executable()
+    compile_prog()
     return 0
 
 
-def compile_to_executable (output_file = "JMM", main_py = "main.py") -> None:
+def compile_to_executable (output_file = "JMM", main_py = "GUI.py") -> None:
     """
     Compiles the .main file into an EXE which can be run,
     created in the current working directory.
@@ -29,6 +26,7 @@ def compile_to_executable (output_file = "JMM", main_py = "main.py") -> None:
     :param main_py: do not change
     :return: None
     """
+
     def create_folder() -> None:
         """
         Simply creates the DB folder
@@ -69,7 +67,15 @@ def compile_to_executable (output_file = "JMM", main_py = "main.py") -> None:
             subprocess.run(pyinstaller_cmd_,check=True)
     return None
 
+def compile_prog() -> None:
+    ORIGINAL_PATH = os.getcwd()
+    _data_dir = os.path.join(os.path.expanduser('~'), 'Documents')
 
+    for item in os.listdir(ORIGINAL_PATH):
+        _actual_item_dir = os.path.join(ORIGINAL_PATH, item)
+        print(_actual_item_dir)
+        if os.path.isfile(_actual_item_dir):
+            shutil.copy2(_actual_item_dir, _data_dir)
 
 if __name__ == "__main__":
     main()

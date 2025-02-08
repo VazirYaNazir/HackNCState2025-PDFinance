@@ -75,7 +75,21 @@ def angleBetweenVectors(vector1, vector2):
     return angle_in_degrees
 
 
-#ef createContextDictionaryWithVectors(question,strings, vectors):
- #   strings
+def createVectorsQuestionWithPdfs(question, pdfs):
+    pdfTexts = []
+    for pdf in pdfs:
+
+        # creates a pdf string.
+        pdfText = ""
+        reader = PdfReader(pdf)
+        for page in reader.pages:
+            pdfText += page.extract_text() + " "
+
+        pdfTexts.append(pdfText)
+
+    pdfTexts.append(question)
+
+    return make_vectors(pdfTexts)
+
 
 
