@@ -1,2 +1,2 @@
 # HackNCState-Project
-Skibidi Sigma
+Placeholder Text. Will be updated in future commits.
