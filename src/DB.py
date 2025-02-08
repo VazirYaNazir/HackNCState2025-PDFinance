@@ -21,7 +21,6 @@ def create_database():
     CREATE TABLE IF NOT EXISTS vectors (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         pdf_vector BLOB NOT NULL,
-        page_vectors BLOB NOT NULL
     )
     ''')
 
@@ -32,7 +31,10 @@ def get_last_id():
     connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
-    cursor.execute('SELECT MAX(id) FROM pdfs')
+    cursor.execute('''
+    SELECT MAX(id) 
+    FROM pdfs
+    ''')
     max_id = cursor.fetchone()[0]
 
     connection.close()
@@ -66,19 +68,20 @@ def retrieve_pdf(pdf_id):
     FROM pdfs
     WHERE id = ?
     ''', (pdf_id,))
-    pages = cursor.fetchone()
 
+    pages = cursor.fetchone()
     connection.close()
+
     return pickle.loads(pages[0]) if pages else []
 
-def store_vectors(vector_id, pdf_vector, page_vectors):
+def store_vector(vector_id, pdf_vector):
     connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
     cursor.execute('''
-    INSERT INTO vectors (id, pdf_vector, page_vectors)
+    INSERT INTO vectors (id, pdf_vector)
     VALUES (?, ?, ?);
-    ''', (vector_id, pickle.dumps(pdf_vector), pickle.dumps(page_vectors)))
+    ''', (vector_id, pickle.dumps(pdf_vector),))
 
     connection.commit()
     connection.close()
@@ -92,21 +95,8 @@ def retrieve_pdf_vectors(vector_id):
     FROM vectors 
     WHERE id = ?
      ''', (vector_id,))
+
     pdf_vector = cursor.fetchone()
-
     connection.close()
+
     return pickle.loads(pdf_vector[0]) if pdf_vector else None
-
-def retrieve_page_vectors(vector_id):
-    connection = sqlite3.connect(db_name)
-    cursor = connection.cursor()
-
-    cursor.execute('''
-    SELECT page_vectors 
-    FROM vectors 
-    WHERE id = ?
-    ''', (vector_id,))
-    page_vectors = cursor.fetchone()
-
-    connection.close()
-    return pickle.loads(page_vectors[0]) if page_vectors else None
