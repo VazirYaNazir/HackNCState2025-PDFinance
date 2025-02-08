@@ -44,6 +44,13 @@ def word_vector(word_set, word_dict):
         vector.append(value)
     return vector
 
+def build_clean_set(*dicts):
+    s = set() #makes empty set
+    for d in dicts:
+        for word in d.keys():
+            s.add(word)
+    return sorted(s)
+
 def make_vectors(strings):
     word_dicts = []
     for s in strings:
@@ -54,3 +61,5 @@ def make_vectors(strings):
         vectors.append(word_vector(word_set,d))
     print(word_set)
     return vectors
+
+
