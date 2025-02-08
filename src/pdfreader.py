@@ -36,6 +36,7 @@ def word_count_dictionary(str1):
             x[b] = 1
     return(x)
 
+
 def word_vector(word_set, word_dict):
     vector = []
     for word in word_set:
@@ -50,6 +51,7 @@ def build_clean_set(*dicts):
         for word in d.keys():
             s.add(word)
     return sorted(s)
+
 
 def make_vectors(strings):
     word_dicts = []
@@ -71,5 +73,9 @@ def angleBetweenVectors(vector1, vector2):
     angle_in_rad = np.arccos(dotProduct/magnitudeMultiply)
     angle_in_degrees = np.degrees(angle_in_rad)
     return angle_in_degrees
+
+
+#ef createContextDictionaryWithVectors(question,strings, vectors):
+ #   strings
 
 

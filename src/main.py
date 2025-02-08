@@ -2,15 +2,24 @@ import sys
 import os
 import subprocess
 import shutil
+import sqlite3
+import time
 from pathlib import Path
 
-def main():
 
+#file imports
+import GUI
+import DB
+import pdfreader
+
+
+def main():
+    compile_to_executable()
 
     return 0
 
 
-def compile_to_executable(output_file = "JMM", main_py = "main.py") -> None:
+def compile_to_executable (output_file = "JMM", main_py = "main.py") -> None:
     """
     Compiles the .main file into an EXE which can be run,
     created in the current working directory.
@@ -20,9 +29,47 @@ def compile_to_executable(output_file = "JMM", main_py = "main.py") -> None:
     :param main_py: do not change
     :return: None
     """
+    def create_folder() -> None:
+        """
+        Simply creates the DB folder
+        WARNING DELETES ANY FOLDER named
+        PDFs THAT ARE IN THE DIRECTORY,
+        :return None:
+        """
+        ORIGINAL_PATH = os.getcwd()
+        if os.path.exists(Path.cwd()/"PDFs"):
+            #check if dup pdf
+            print("Duplicate PDFs folder in current dir...")
+            print("deleting PDFs in three seconds")
+            time.sleep(3)
+            shutil.rmtree(Path.cwd()/"PDFs")
+        else:
+            #make DB dir
+            DB_path = Path.cwd()/"PDFs"
+            DB_path.mkdir(parents=True, exist_ok=True) #makes a directory
+            try:
+                #make DB path
+                os.chdir(Path.cwd()/"PDFs")
+                DB.create_database()
+            except:
+                #Expection handling
+                print("problem changing dir!")
+            finally:
+                #move back to original dir
+                os.chdir(ORIGINAL_PATH)
+            #Pyinstaller_cmd
+            pyinstaller_cmd_ = [
+                "pyinstaller",
+                "--onefile",
+                "--noconsole",
+                "--clean",
+                "--name", output_file,
+                main_py
+            ]
+            subprocess.run(pyinstaller_cmd_,check=True)
+    return None
 
 
-    return Non
 
 if __name__ == "__main__":
     main()
