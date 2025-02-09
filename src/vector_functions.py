@@ -1,69 +1,103 @@
 import math as m
 import regex as rg
-import main
 from collections import Counter
+import main
 
-class VectorFunctions(list):
-    def __init__(self, vector: list[int]):
-        self.vector = vector
+# ---------------------------
+# Vector Functions
+# ---------------------------
 
-    def calculate_mag(self) -> float:
-        _sum_ = 0
-        for _ in range(len(self.vector)):
-            _sum_ += self.vector[_] ** 2
-        return m.sqrt(_sum_)
+def calculate_mag(vector: list[int]) -> float:
+    """
+    Calculate the magnitude (Euclidean norm) of a vector.
 
-    def dot_product(self, compare_vector: list[int]) -> float:
-        while len(self.vector) != len(compare_vector):
-            if len(self.vector) > len(compare_vector):
-                compare_vector.append(0)
-            else:
-                self.vector.append(0)
+    Args:
+        vector: A list of integers representing the vector.
 
-        sum_ = 0
-        for i in range(len(compare_vector)):
-            sum_ += compare_vector[i] * self.vector[i]
-
-        return sum_
-
-    def calculate_vector_angle(self, comparison_vector: list[int], comparison_vector_2: list[int]) -> float:
-        v2 = VectorFunctions(comparison_vector_2)
-        v1 = VectorFunctions(comparison_vector)
-
-        v1_mag = v1.calculate_mag()
-        v2_mag = v2.calculate_mag()
-
-        v1_v2_dot = v1.dot_product(compare_vector=v2.vector)
-
-        return m.acos(v1_v2_dot/(v1_mag*v2_mag))
+    Returns:
+        The magnitude of the vector.
+    """
+    return m.sqrt(sum(x ** 2 for x in vector))
 
 
-class StringFunctions(VectorFunctions):
-    def __init__(self, vector: list[int],id: int, pages: list[str] ):
-        super().__init__(vector)
-        self.pages = pages
-        self.dict_words = {}
+def dot_product(vector1: list[int], vector2: list[int]) -> float:
+    """
+    Calculate the dot product of two vectors. Pads the shorter vector with zeros.
 
-    def count_words_and_transform_dict(self) -> None:
-        """
-        Where each key is a word and each value
-        is the amount that word is said
-        :return:
-        """
-        words_found = rg.findall(r'\b[a-zA-Z]+\b', " ".join(self.pages).lower())
-        word_counts = Counter(words_found)
-        self.dict_words = {word: word_counts[word] for word in main.english_words if word in word_counts}
-        pass
+    Args:
+        vector1: The first vector as a list of integers.
+        vector2: The second vector as a list of integers.
+
+    Returns:
+        The dot product of the two vectors.
+    """
+    v1 = vector1.copy()
+    v2 = vector2.copy()
+
+    if len(v1) > len(v2):
+        v2.extend([0] * (len(v1) - len(v2)))
+    elif len(v2) > len(v1):
+        v1.extend([0] * (len(v2) - len(v1)))
+
+    return sum(a * b for a, b in zip(v1, v2))
 
 
-    def create_vector(self):
-        # takes in a set a word_set probably made by build clean set maybe smth like: [cucumber, apple, banana, pineapple, coconut]
-        # takes in a dictionary with word counts, smth like {cucumber: 2, apple:1, pineapple:3}
-        # returns a vector array that puts the word counts from the dictionary in the same format as the word set.
-        # ex: [2,1,0,3,0]
-        self.count_words_and_transform_dict()
-        vector = []
-        for value in self.dict_words.values():
-            vector.append(value)
+def calculate_vector_angle(vector1: list[int], vector2: list[int]) -> float:
+    """
+    Calculate the angle (in radians) between two vectors.
+    Raises an exception if one of the vectors has zero magnitude.
 
-        return vector
+    Args:
+        vector1: The first vector as a list of integers.
+        vector2: The second vector as a list of integers.
+
+    Returns:
+        The angle between the two vectors in radians.
+
+    Raises:
+        ValueError: If either vector has zero magnitude.
+    """
+    mag1 = calculate_mag(vector1)
+    mag2 = calculate_mag(vector2)
+
+    if mag1 == 0 or mag2 == 0:
+        raise ValueError("Cannot calculate angle between vectors with zero magnitude.")
+
+    dp = dot_product(vector1, vector2)
+    return m.acos(dp / (mag1 * mag2))
+
+
+# ---------------------------
+# String (Word) Functions
+# ---------------------------
+
+def count_words_and_transform_dict(pages: list[str]) -> dict:
+    """
+    Given a list of pages (strings), count the occurrences of each word.
+    Only words that appear in main.english_words are kept.
+
+    Args:
+        pages: A list of strings representing the text from each page.
+
+    Returns:
+        A dictionary mapping each word (key) to its count (value).
+    """
+    text = " ".join(pages).lower()
+    words_found = rg.findall(r'\b[a-zA-Z]+\b', text)
+    word_counts = Counter(words_found)
+
+    return {word: word_counts[word] for word in main.english_words if word in word_counts}
+
+
+def create_vector(pages: list[str]) -> list[int]:
+    """
+    Given a list of pages, return a vector of word counts for each word in the predefined word set.
+
+    Args:
+        pages: A list of strings representing the text from each page.
+
+    Returns:
+        A list of integers where each element represents the count of a word from the predefined set.
+    """
+    word_counts = count_words_and_transform_dict(pages)
+    return [word_counts.get(word, 0) for word in main.english_words]

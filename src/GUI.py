@@ -3,7 +3,7 @@ from tkinter import filedialog, messagebox
 import shutil
 import os
 import main
-import api
+from api import api_
 
 global_value = 0
 
@@ -45,7 +45,7 @@ def run_gui() -> None:
         if userInput == "":
             pass
         else:
-            update_output(api.api_(userInput, global_value))
+            update_output(api_(userInput, global_value))
             textEntry.delete(0,tk.END)
 
     fontName = "Times New Roman"

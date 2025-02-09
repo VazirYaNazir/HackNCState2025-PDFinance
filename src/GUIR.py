@@ -2,12 +2,13 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
     QTextEdit, QFileDialog, QSlider, QMessageBox, QScrollArea, QFrame)
+
 from PyQt6.QtCore import Qt
 import sys
 import os
-import api
 
-global_value = 0
+
+global_value = 1
 
 class PDFAnalyzerApp(QWidget):
     def __init__(self):
@@ -28,7 +29,7 @@ class PDFAnalyzerApp(QWidget):
 
         # Create a QLabel for the logo
         logo_label = QLabel(self)
-        logo_pixmap = QPixmap("logo.png")  # Change the path if the logo is located elsewhere
+        logo_pixmap = QPixmap("../images/logo.png")  # Change the path if the logo is located elsewhere
         logo_label.setPixmap(logo_pixmap)
         logo_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)  # Align to top-right
         layout.addWidget(logo_label, alignment=Qt.AlignmentFlag.AlignRight)
@@ -155,7 +156,7 @@ class PDFAnalyzerApp(QWidget):
         if userInput:
             self.update_output(f"User's Query: {userInput}")
             self.text_entry.clear()
-            api.question = userInput
+            self.update_output(api.update_gui(userInput,global_value))
 
     def image_clicked(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select PDF", "", "PDF Files (*.pdf)")

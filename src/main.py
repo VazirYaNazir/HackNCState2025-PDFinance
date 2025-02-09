@@ -5,13 +5,14 @@ import nltk
 from nltk.corpus import words
 
 #file imports
-import GUI
 import DB
+import GUIR
 
 
 def main():
     create_db()
-    GUI.run_gui()
+    # GUI.run_gui()
+    GUIR.run_gui()
     return 0
 
 
