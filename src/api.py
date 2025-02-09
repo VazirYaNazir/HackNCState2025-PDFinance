@@ -1,8 +1,11 @@
 from PyPDF2.generic import NullObject
 from openai import OpenAI
 import DB
-import numpy as np
+import os
 import vectorfunctions as vf
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def find_page(question, filter):
     # Filter is an integer which serves as a limit for the amount of documents searched
@@ -35,10 +38,14 @@ def find_page(question, filter):
 
     # find the best page in each of our best pdfs
     page_strings = []
-    for i in range(0, range(smallest_n)):
+    for i in range(0, range(len(smallest_n))):
         PDFpages = DB.retrieve_pdf(smallest_n[i][1])
         pageVectors = vf.make_page_vectors(PDFpages, question)
-        
+
+        pageAngles = []
+        #find best page vector in pdf by looping through pageVectors, adding the angle to pageAngles
+        for vector in pageVectors:
+            pageAngles.append(vf.angle_between_vectors(vector, pageVectors[-1]))
 
 
 
@@ -66,7 +73,7 @@ def find_page(question, filter):
     """
 
 def make_prompt_to_chat_gpt(question, page_strings):
-    client = OpenAI(api_key="", base_url="")
+    client = OpenAI(api_key=os.getenv("OPEN_AI_API_KEY"), base_url=os.getenv("OPEN_AI_URL"))
 
     context_string = ""
     for i in page_strings:
@@ -75,7 +82,7 @@ def make_prompt_to_chat_gpt(question, page_strings):
     prompt_string = f"{question}\nAnswer the question above with the following context:\n {context_string}"
 
     response = client.chat.completions.create(
-    model="deepseek-chat",
+    model="chatgpt-4o-latest",
     messages=[
         {"role": "system", "content": "You are a helpful financial assistant"},
         {"role": "user", "content": prompt_string},
