@@ -1,64 +1,39 @@
+import os.path
 import sqlite3
-import pathlib
 import pickle
 from PyPDF2 import PdfReader
+from functools import wraps
+
 
 db_name = 'PDFs.db'
+def with_pdf_directory(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        current_dir = os.getcwd()
+        parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        pdf_dir = os.path.join(parent_dir, "PDFs")
+        try:
+            os.chdir(os.path.abspath(os.path.join(os.getcwd(), "..")))
+            if os.path.exists("PDFs"):
+                os.chdir(pdf_dir)
+            return func(*args, **kwargs)
+        finally:
+            os.chdir(current_dir)
+    return wrapper
 
-def create_database():
-    connection = sqlite3.connect(db_name)
-    cursor = connection.cursor()
 
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS pdfs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        filename TEXT NOT NULL,
-        pages BLOB NOT NULL
-    )
-    ''')
-
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS vectors (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        pdf_vector BLOB NOT NULL,
-    )
-    ''')
-
-    connection.commit()
-    connection.close()
-
+@with_pdf_directory
 def get_last_id():
     connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
 
-    cursor.execute('''
-    SELECT MAX(id) 
-    FROM pdfs
-    ''')
+    cursor.execute('SELECT MAX(id) FROM pdfs')
     max_id = cursor.fetchone()[0]
 
     connection.close()
     return max_id if max_id is not None else 0
 
-def store_pdf(filename):
-    pdf_path = pathlib.Path.cwd() / "PDFs" / filename
-    pages = []
-
-    reader = PdfReader(pdf_path)
-    for page in reader.pages:
-        pages.append(page.extract_text())
-
-    connection = sqlite3.connect(db_name)
-    cursor = connection.cursor()
-
-    cursor.execute('''
-    INSERT INTO pdfs (filename, pages)
-    VALUES (?, ?);
-    ''', (filename, pickle.dumps(pages)))
-
-    connection.commit()
-    connection.close()
-
+@with_pdf_directory
 def retrieve_pdf(pdf_id):
     connection = sqlite3.connect(db_name)
     cursor = connection.cursor()
@@ -74,29 +49,20 @@ def retrieve_pdf(pdf_id):
 
     return pickle.loads(pages[0]) if pages else []
 
-def store_vector(vector_id, pdf_vector):
-    connection = sqlite3.connect(db_name)
-    cursor = connection.cursor()
+@with_pdf_directory
+def store_pdf(file_path: str) -> None:
+        file_name = os.path.basename(file_path)
+        pages = []
 
-    cursor.execute('''
-    INSERT INTO vectors (id, pdf_vector)
-    VALUES (?, ?, ?);
-    ''', (vector_id, pickle.dumps(pdf_vector),))
+        reader = PdfReader(file_path)
+        for page in reader.pages:
+            pages.append(page.extract_text())
 
-    connection.commit()
-    connection.close()
+        connection = sqlite3.connect(db_name)
+        cursor = connection.cursor()
 
-def retrieve_pdf_vectors(vector_id):
-    connection = sqlite3.connect(db_name)
-    cursor = connection.cursor()
+        cursor.execute('INSERT INTO pdfs (filename, pages) VALUES (?, ?)', (file_name, pickle.dumps(pages)))
 
-    cursor.execute('''
-    SELECT pdf_vector 
-    FROM vectors 
-    WHERE id = ?
-     ''', (vector_id,))
+        connection.commit()
+        connection.close()
 
-    pdf_vector = cursor.fetchone()
-    connection.close()
-
-    return pickle.loads(pdf_vector[0]) if pdf_vector else None

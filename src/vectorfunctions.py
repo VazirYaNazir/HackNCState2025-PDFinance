@@ -55,8 +55,9 @@ def build_clean_set(*dicts):
     return sorted(s)
 
 
-def make_page_vectors(strings):
+def make_page_vectors(strings, question):
     word_dicts = []
+    strings.append(question)
     for s in strings:
         word_dicts.append(word_count_dictionary(s))
     word_set = build_clean_set(word_dicts)
@@ -67,39 +68,39 @@ def make_page_vectors(strings):
     return vectors
 
 def angle_between_vectors(vector1, vector2):
-    v1 = np.array(vector1);
-    v2 = np.array(vector2);
+    v1 = np.array(vector1)
+    v2 = np.array(vector2)
 
-    dotProduct = np.dot(v1,v2);
-    magnitudeMultiply = np.linalg.norm(v1) * np.linalg.norm(v2);
-    angle_in_rad = np.arccos(dotProduct/magnitudeMultiply);
-    angle_in_degrees = np.degrees(angle_in_rad);
-    return angle_in_degrees;
+    dotProduct = np.dot(v1,v2)
+    magnitudeMultiply = np.linalg.norm(v1) * np.linalg.norm(v2)
+    angle_in_rad = np.arccos(dotProduct/magnitudeMultiply)
+    angle_in_degrees = np.degrees(angle_in_rad)
+    return angle_in_degrees
 
 # creating vectors for each pdf
 def create_vectorsPdfs_with_question(question):
-    pdfTexts = [];
+    pdfTexts = []
     for i in range(1,DB.get_last_id()+1):
-        pdfText = "";
+        pdfText = ""
         for page in retrieve_pdf(i):
-            pdfText.append(page);
+            pdfText.append(page)
 
-        pdfTexts.append(pdfText);
+        pdfTexts.append(pdfText)
 
-    pdfTexts.append(question);
+    pdfTexts.append(question)
 
-    return make_page_vectors(pdfTexts);
+    return make_page_vectors(pdfTexts)
 
 
 #create the vectors for the questions
 def createVectorsPagesWithQuestion(question,pdfIndex):
-    pagesList = [];
+    pagesList = []
     for page in retrieve_pdf(pdfIndex):
-        pagesList.append(page);
+        pagesList.append(page)
 
-    pagesList.append(question);
+    pagesList.append(question)
 
-    return make_page_vectors(pagesList);
+    return make_page_vectors(pagesList)
 
 def checkVectorWithQuestionVector(vectors):
     minimum = angle_between_vectors(vectors[0], vectors[-1])

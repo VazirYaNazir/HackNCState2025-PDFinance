@@ -1,20 +1,19 @@
 import os
 import sqlite3
 import shutil
-import sys
-import pathlib
 
 #file imports
 import GUI
+import DB
 
 
 def main():
-    create_DB()
+    create_db()
     GUI.run_gui()
     return 0
 
 
-def create_DB() -> None:
+def create_db() -> None:
     current_dir = os.getcwd()
     parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     pdf_dir = os.path.join(parent_dir, "PDFs")
@@ -26,6 +25,15 @@ def create_DB() -> None:
             os.chdir(pdf_dir)
             try:
                 con_db = sqlite3.connect("PDFs.db")
+                cursor = con_db.cursor()
+                cursor.execute('''
+                CREATE TABLE IF NOT EXISTS pdfs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    filename TEXT NOT NULL,
+                    pages BLOB NOT NULL
+                )
+                ''')
+                con_db.commit()
                 con_db.close()
             except:
                 print("were cooked!")
@@ -36,6 +44,18 @@ def create_DB() -> None:
     finally:
         os.chdir(current_dir)
 
+
+class File_Handler:
+    def __init__(self,path: str):
+        self.path = path
+
+    def move_file(self, move_path: str):
+        current_dir = os.path.dirname(__file__)
+        pdfs_dir = os.path.join(current_dir, "..", "pdfs")
+        file_name = os.path.basename(move_path)
+        destination_path = os.path.join(pdfs_dir, file_name)
+        shutil.move(move_path, destination_path)
+        DB.store_pdf(destination_path)
 
 if __name__ == "__main__":
     main()
