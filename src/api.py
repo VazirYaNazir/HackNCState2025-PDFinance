@@ -38,7 +38,7 @@ def find_page(question, filter):
     for i in range(0, range(smallest_n)):
         PDFpages = DB.retrieve_pdf(smallest_n[i][1])
         pageVectors = vf.make_page_vectors(PDFpages, question)
-
+        
 
 
 
@@ -66,7 +66,7 @@ def find_page(question, filter):
     """
 
 def make_prompt_to_chat_gpt(question, page_strings):
-    client = OpenAI(api_key="", base_url="https://api.deepseek.com/v1")
+    client = OpenAI(api_key="", base_url="")
 
     context_string = ""
     for i in page_strings:
