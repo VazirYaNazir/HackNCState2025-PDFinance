@@ -1,11 +1,10 @@
-from pypdf import PdfReader
 import numpy as np
-import DB
+import nltk
 from nltk.tokenize import word_tokenize
 from transformers.data.data_collator import tolist
-import nltk
-
 nltk.download('punkt_tab')
+
+
 
 def clean_string(str):
     # Keep only alphabetical characters in the string
@@ -30,7 +29,6 @@ def word_count_dictionary(str1):
             x[b] = 1
     return(x)
 
-
 def word_vector(word_set, word_dict):
     vector = []
     for word in word_set:
@@ -39,9 +37,10 @@ def word_vector(word_set, word_dict):
         vector.append(value)
     return vector
 
-def build_clean_set(*dicts):
+def build_clean_set(*dicts: dict):
     s = set() #makes empty set
-    for d in dicts:
+    dictionaries = dicts[0]
+    for d in dictionaries:
         for word in d.keys():
             s.add(word)
     return sorted(s)
@@ -56,68 +55,42 @@ def make_page_vectors(strings, question):
     vectors = []
     for d in word_dicts:
         vectors.append(word_vector(word_set,d))
-    print(word_set)
     return vectors
 
-def angle_between_vectors(vector1, vector2):
+def angle_between_vectors(vector1: list, vector2:list):
     v1 = np.array(vector1)
     v2 = np.array(vector2)
 
-    dotProduct = np.dot(v1,v2)
-    magnitudeMultiply = np.linalg.norm(v1) * np.linalg.norm(v2)
-    angle_in_rad = np.arccos(dotProduct/magnitudeMultiply)
+    min_length = min(len(v1), len(v2))
+    v1 = v1[:min_length]
+    v2 = v2[:min_length]
+    dot_product = np.dot(v1,v2)
+    magnitude_multiply = np.linalg.norm(v1) * np.linalg.norm(v2)
+    angle_in_rad = np.arccos(dot_product/magnitude_multiply)
     angle_in_degrees = np.degrees(angle_in_rad)
     return angle_in_degrees
 
-# creating vectors for each pdf
-def create_vectorsPdfs_with_question(question):
-    pdfTexts = []
-    for i in range(1,DB.get_last_id()+1):
-        pdfText = ""
-        for page in DB.retrieve_pdf(i):
-            pdfText.append(page)
-
-        pdfTexts.append(pdfText)
-
-    pdfTexts.append(question)
-
-    return make_page_vectors(pdfTexts)
-
-
-#create the vectors for the questions
-def createVectorsPagesWithQuestion(question,pdfIndex):
-    pagesList = []
-    for page in DB.retrieve_pdf(pdfIndex):
-        pagesList.append(page)
-
-    pagesList.append(question)
-
-    return make_page_vectors(pagesList)
-
-def checkVectorWithQuestionVector(vectors):
-    minimum = angle_between_vectors(vectors[0], vectors[-1])
-    id = 1
-    for index, vector in enumerate(vectors[1:-1]):
-        if minimum > angle_between_vectors(vector, vectors[-1]):
-            minimum = angle_between_vectors(vector, vectors[-1])
-            id += index + 1
-        else:
-            continue
-
-def make_pdf_vector_with_question(strings,question):
+def make_pdf_vector_with_question(strings: list,question: str):
     word_dicts = []
-    strings.append(question)
+    temp_ = [question]
+    strings.extend(temp_)
+
     for s in strings:
         word_dicts.append(word_count_dictionary(s))
+    #works until here
     word_set = build_clean_set(word_dicts)
+
     vectors = []
     for d in word_dicts:
         vectors.append(word_vector(word_set,d))
 
-    questionVector = vectors.pop()
-    pdfVector = np.array()
+
+    question_vector = vectors[-1]
+    del vectors[-1]
+    pdf_vector = np.array(len(np.array(vectors)))
     for vector in vectors:
-        pdfVector.add(pdfVector, np.array(vector))
+        pdf_vector = np.add(pdf_vector, np.array(vector))
 
+    list(pdf_vector).append(question_vector)
 
-    return tolist(pdfVector).append(questionVector)
+    return pdf_vector

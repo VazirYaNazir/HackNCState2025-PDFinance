@@ -1,6 +1,7 @@
 from PyPDF2.generic import NullObject
 from openai import OpenAI
 import DB
+import numpy as np
 import vectorfunctions as vf
 
 def find_page(question, filter):
@@ -10,22 +11,40 @@ def find_page(question, filter):
 
     for i in range(1,DB.get_last_id()+1):
         pages = DB.retrieve_pdf(i)
+        #print(vf.make_pdf_vector_with_question(pages,question))
         pdf_vectors.append(vf.make_pdf_vector_with_question(pages,question))
+        print(pdf_vectors)
+        print(type(pdf_vectors))
 
     angles = []
+
+
+    question_vector = pdf_vectors[-1]
+    del pdf_vectors[-1]
     for pdf_vector in pdf_vectors:
-        question_vector = pdf_vector.pop()
-        angles.append(vf.angle_between_vectors(pdf_vector, question_vector))
+        angles.append(vf.angle_between_vectors(question_vector, pdf_vector))
+    print(angles)
 
     smallest_n = []
     for index, angle in enumerate(angles):
         smallest_n.append([angle,index+1])
     smallest_n.sort(key=lambda x: x[0])
     smallest_n = smallest_n[:filter]
+    # [[angle, id], [angle,id]]
+    print(smallest_n)
 
     # find the best page in each of our best pdfs
-    pageStrings = []
-    for pdf_id in smallest_n[1]:
+    page_strings = []
+    for i in range(0, range(smallest_n)):
+        PDFpages = DB.retrieve_pdf(smallest_n[i][1])
+        pageVectors = vf.make_page_vectors(PDFpages, question)
+        #
+
+
+
+
+    """
+    for pdf_id in range(1, len(smallest_n)):
         best_pdf_pages = DB.retrieve_pdf(pdf_id)
         page_vectors = vf.make_page_vectors(best_pdf_pages, question)
         question_vector = page_vectors.pop()
@@ -40,29 +59,31 @@ def find_page(question, filter):
         smallest_j = smallest_j[:filter]
 
         for id in smallest_n[1]:
-            pdf = vf.retrieve_pdf(id)
-            pageStrings.append(pdf[smallest_j[1]])
+            pdf = DB.retrieve_pdf(id)
+            page_strings.append(pdf[smallest_j[1]])
 
-    return makePromptToDeepSeek(question, pageStrings)
+    return make_prompt_to_chat_gpt(question, page_strings)
+    """
 
-def makePromptToDeepSeek(question, pageStrings):
-    client = OpenAI(api_key="<DeepSeek API Key>", base_url="https://api.deepseek.com")
+def make_prompt_to_chat_gpt(question, page_strings):
+    client = OpenAI(api_key="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", base_url="https://api.deepseek.com/v1")
 
-    contextstring = ""
-    for i in pageStrings:
-        contextstring += i
+    context_string = ""
+    for i in page_strings:
+        context_string += i
 
-    promptString = f"{question}\nAnswer the question above with the following context:\n {contextstring}"
+    prompt_string = f"{question}\nAnswer the question above with the following context:\n {context_string}"
 
     response = client.chat.completions.create(
     model="deepseek-chat",
     messages=[
         {"role": "system", "content": "You are a helpful financial assistant"},
-        {"role": "user", "content": promptString},
+        {"role": "user", "content": prompt_string},
     ],
     stream=False
     )
-
+    #delete once running
+    print(prompt_string)
     return response.choices[0].message.content
 
 
