@@ -1,4 +1,4 @@
-### PDFinance
+# PDFinance
 ## Inspiration
 - Financial analysts, investors, and professionals deal with massive amounts of documents (SEC filings, earnings reports, contracts).
 - Searching for specific insights manually is time-consuming and inefficient.
