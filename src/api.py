@@ -38,7 +38,7 @@ def find_page(question, filter):
     for i in range(0, range(smallest_n)):
         PDFpages = DB.retrieve_pdf(smallest_n[i][1])
         pageVectors = vf.make_page_vectors(PDFpages, question)
-        #
+
 
 
 
