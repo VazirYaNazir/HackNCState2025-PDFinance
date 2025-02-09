@@ -1,19 +1,11 @@
 from pypdf import PdfReader
 import numpy as np
-from transformers.data.data_collator import tolist
-
 import DB
 from nltk.tokenize import word_tokenize
+from transformers.data.data_collator import tolist
 import nltk
 
-from src.DB import get_last_id, retrieve_pdf
-
 nltk.download('punkt_tab')
-
-reader = PdfReader("pdfs/PrinciplesofFinance-WEB.pdf")
-for page in reader.pages:
-    print(page.extract_text())
-
 
 def clean_string(str):
     # Keep only alphabetical characters in the string
@@ -82,7 +74,7 @@ def create_vectorsPdfs_with_question(question):
     pdfTexts = []
     for i in range(1,DB.get_last_id()+1):
         pdfText = ""
-        for page in retrieve_pdf(i):
+        for page in DB.retrieve_pdf(i):
             pdfText.append(page)
 
         pdfTexts.append(pdfText)
@@ -95,7 +87,7 @@ def create_vectorsPdfs_with_question(question):
 #create the vectors for the questions
 def createVectorsPagesWithQuestion(question,pdfIndex):
     pagesList = []
-    for page in retrieve_pdf(pdfIndex):
+    for page in DB.retrieve_pdf(pdfIndex):
         pagesList.append(page)
 
     pagesList.append(question)

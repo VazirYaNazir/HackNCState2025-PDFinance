@@ -36,17 +36,15 @@ def run_gui() -> None:
         if value.isdigit():
             update_output(f"Broadness set to: {value}")
             broadness_entry.delete(0, tk.END)
-            # send value somewhere
         else:
             messagebox.showerror("Invalid Input", "Please enter a numerical value.")
 
     def submit_text(event = None):
-        update_output(api.find_page(textEntry.get(), global_value))
         userInput = textEntry.get()
         if userInput == "":
             pass
         else:
-            print(userInput) #REPLACE THIS WITH THE FUNCTION THAT WILL TAKE THE PROMPT
+            update_output(api.find_page(textEntry.get(), global_value))
             textEntry.delete(0,tk.END)
 
     fontName = "Times New Roman"
