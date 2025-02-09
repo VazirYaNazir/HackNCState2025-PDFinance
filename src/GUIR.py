@@ -1,3 +1,5 @@
+import shutil
+
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
@@ -6,6 +8,10 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 import sys
 import os
+import DB
+import main
+import querymaker
+import test
 
 
 global_value = 1
@@ -156,14 +162,17 @@ class PDFAnalyzerApp(QWidget):
         if userInput:
             self.update_output(f"User's Query: {userInput}")
             self.text_entry.clear()
-            self.update_output(api.update_gui(userInput,global_value))
+            self.update_output(querymaker.askPrompt(userInput,global_value))
 
     def image_clicked(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select PDF", "", "PDF Files (*.pdf)")
+        f_ = main.File_Handler
+        print(f"Selected file path: {file_path}")  # Debugging line
         if file_path:
-            QMessageBox.information(self, "Success", "File uploaded successfully")
-            file_name = os.path.basename(file_path)
-            self.update_output(f"{file_name} uploaded successfully")
+            pdf_to_move = main.File_Handler(path=file_path)
+            pdf_to_move.move_file(file_path)
+            test.generatevectors()
+            # Update the output box with the success message
         else:
             QMessageBox.warning(self, "Error", "File was not uploaded.")
 
@@ -189,3 +198,4 @@ def run_gui():
         app.exec()
     except Exception as e:
         print("Fatal Error. Something is going on with the GUI loop")
+

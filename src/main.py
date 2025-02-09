@@ -1,18 +1,18 @@
 import os
 import sqlite3
 import shutil
-import nltk
-from nltk.corpus import words
 
 #file imports
 import DB
-import GUIR
+import GUI
 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def main():
     create_db()
-    # GUI.run_gui()
-    GUIR.run_gui()
+    GUI.run_gui()
     return 0
 
 
@@ -46,7 +46,6 @@ def create_db() -> None:
     finally:
         os.chdir(current_dir)
 
-
 class File_Handler:
     def __init__(self,path: str):
         self.path = path
@@ -59,13 +58,6 @@ class File_Handler:
         shutil.move(move_path, destination_path)
         DB.store_pdf(destination_path)
 
-
-nltk.download('words')
-english_words = list(words.words())
-
-def get_english_words():
-    """BE VERY CAREFUL WITH THIS!!!"""
-    return english_words
 
 
 if __name__ == "__main__":

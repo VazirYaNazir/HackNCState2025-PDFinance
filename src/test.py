@@ -1,41 +1,45 @@
 from langchain_community.document_loaders import DirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
-# from langchain.embeddings import OpenAIEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 import openai
 from dotenv import load_dotenv
 import os
 import shutil
+import DB
 
-# Load environment variables. A
+# Load environment variables
 load_dotenv()
 
-#---- Set OpenAI API key
-# Change environment variable name from "OPENAI_API_KEY" to the name given in
-# your .env file.
-openai.api_key = os.environ['OPENAI_API_KEY']
+# ---- Set OpenAI API key
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise ValueError("Missing OpenAI API key. Set it as an environment variable.")
 
-# set up chrmoma DB
+openai.api_key = api_key  # Correct initialization
+
+# Set up Chroma DB
 CHROMA_PATH = "chroma"
 DATA_PATH = "data/books"
 
-# main function
-def main():
+# Main function
+def generatevectors():
     generate_data_store()
 
-
-#create documents using load documents
+# Create documents using load documents
 def generate_data_store():
-    
-    loader = DirectoryLoader(DATA_PATH, glob="*.md")
-    documents = loader.load()
+    loader = []
+    for i in range(1, DB.get_last_id() + 1):
+        text = DB.retrieve_pdf(i)
+        loader.append(text)
+
+    # Convert to list of Document objects
+    documents = [Document("".join(text)) for text in loader]
     chunks = split_text(documents)
     save_to_chroma(chunks)
 
-
-# split text using a recursive chracter splitter (splits documents into 300 character increments!)
+# Split text using RecursiveCharacterTextSplitter
 def split_text(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=300,
@@ -44,29 +48,19 @@ def split_text(documents: list[Document]):
         add_start_index=True,
     )
     chunks = text_splitter.split_documents(documents)
-    print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
-
-    document = chunks[10]
-    print(document.page_content)
-    print(document.metadata)
-
     return chunks
 
-
+# Save text chunks to Chroma vector store
 def save_to_chroma(chunks: list[Document]):
-    # Clear out the database first. basically checks if Chroma path exists, if it does, rm it. We want new vectors every time theres
-    # we need to save the vectors (ie save to chroma)
+    if not chunks:
+        raise ValueError("Cannot save empty chunks to Chroma DB.")
+
     if os.path.exists(CHROMA_PATH):
         shutil.rmtree(CHROMA_PATH)
 
-    # Create a new DB from the documents.
     db = Chroma.from_documents(
-        chunks, OpenAIEmbeddings(), persist_directory=CHROMA_PATH
+        documents=chunks,
+        embedding=OpenAIEmbeddings(),
+        persist_directory=CHROMA_PATH
     )
-    
-    db.persist()
     print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}.")
-
-
-if __name__ == "__main__":
-    main()

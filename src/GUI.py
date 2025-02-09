@@ -3,13 +3,13 @@ from tkinter import filedialog, messagebox
 import shutil
 import os
 import main
-from api import api_
-
-global_value = 0
+import querymaker
+import test
+global_value = 1
 
 
 def run_gui() -> None:
-
+    
     def update_output(text):
         output_box.config(state=tk.NORMAL)  # Allow editing
         output_box.insert(tk.END, text + "\n")  # Add new text with a newline
@@ -45,17 +45,18 @@ def run_gui() -> None:
         if userInput == "":
             pass
         else:
-            update_output(api_(userInput, global_value))
+            test.generatevectors()
+            update_output(querymaker.askPrompt(userInput, global_value))
             textEntry.delete(0,tk.END)
 
     fontName = "Times New Roman"
 
     window = tk.Tk()
     window.geometry("1000x1000")
-    window.title('JMM Financial PDF Analysis')
+    window.title('PDFinance PDF Analysis Tool')
     window.configure(bg = "lightgray")
 
-    label = tk.Label(window, text = "Welcome to JMM Financial PDF Analysis\nUpload a PDF and enter your question!", font = (fontName, 18), background="lightgray")
+    label = tk.Label(window, text = "Welcome to PDFinance PDF Analysis Tool\nUpload a PDF and enter your question!", font = (fontName, 18), background="lightgray")
     label.pack(padx = 30, pady = 30)
 
     FileUploadDescription = tk.Label(window, text = "Click the button below and upload your PDFs.", font = (fontName, 16), background = "lightgray")
@@ -89,10 +90,10 @@ def run_gui() -> None:
     output_box.config(yscrollcommand=scrollbar.set)
 
     sidebar_width = 200
-    sidebar = tk.Frame(window, bg="gray", width=sidebar_width, height=800)
+    sidebar = tk.Frame(window, bg="blue", width=sidebar_width, height=800)
     sidebar.place(x=927, y=0)
 
-    broadness_label = tk.Label(sidebar, text="Broadness", bg="gray", fg="white", font=(fontName, 14, "bold"))
+    broadness_label = tk.Label(sidebar, text="Broadness", bg="blue", fg="white", font=(fontName, 14, "bold"))
     broadness_label.pack(pady=15)
 
     broadness_entry = tk.Entry(sidebar, font=(fontName, 12), width=10, justify="center")
@@ -102,4 +103,5 @@ def run_gui() -> None:
     broadness_submit.pack(pady=5)
 
     window.bind("<Return>",submit_text)
+
     window.mainloop()
