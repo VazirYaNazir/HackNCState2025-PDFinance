@@ -1,7 +1,6 @@
 import numpy as np
 import nltk
 from nltk.tokenize import word_tokenize
-from transformers.data.data_collator import tolist
 nltk.download('punkt_tab')
 
 

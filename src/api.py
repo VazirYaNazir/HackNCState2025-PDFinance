@@ -39,13 +39,16 @@ def find_page(question, filter):
     # find the best page in each of our best pdfs
     page_strings = []
     for i in range(0, range(len(smallest_n))):
-        PDFpages = DB.retrieve_pdf(smallest_n[i][1])
-        pageVectors = vf.make_page_vectors(PDFpages, question)
+        pdf_pages = DB.retrieve_pdf(smallest_n[i][1])
+        page_vectors = vf.make_page_vectors(PDFpages, question)
 
-        pageAngles = []
+        page_angles = []
         #find best page vector in pdf by looping through pageVectors, adding the angle to pageAngles
-        for vector in pageVectors:
-            pageAngles.append(vf.angle_between_vectors(vector, pageVectors[-1]))
+        for vector in page_vectors:
+            page_angles.append(vf.angle_between_vectors(vector, pageVectors[-1]))
+
+        #for angle in page_angles:
+        #
 
 
 
