@@ -66,7 +66,7 @@ def find_page(question, filter):
     """
 
 def make_prompt_to_chat_gpt(question, page_strings):
-    client = OpenAI(api_key="pd", base_url="https://api.deepseek.com/v1")
+    client = OpenAI(api_key="", base_url="https://api.deepseek.com/v1")
 
     context_string = ""
     for i in page_strings:
