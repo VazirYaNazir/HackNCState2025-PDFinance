@@ -67,7 +67,7 @@ def angle_between_vectors(vector1: list, vector2:list):
     magnitude_multiply = np.linalg.norm(v1) * np.linalg.norm(v2)
     angle_in_rad = np.arccos(dot_product/magnitude_multiply)
     angle_in_degrees = np.degrees(angle_in_rad)
-    return angle_in_degrees
+    return float(angle_in_degrees)
 
 def make_pdf_vector_with_question(strings: list,question: str):
     word_dicts = []

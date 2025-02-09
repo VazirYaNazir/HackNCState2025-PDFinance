@@ -1,13 +1,24 @@
 import os
 import sqlite3
 import shutil
+import nltk
+from nltk.corpus import words
 
 #file imports
 import GUI
 import DB
 
 
+nltk.download('words')
+english_words = list(words.words())
+
+def get_english_words():
+    """BE VERY CAREFUL WITH THIS!!!"""
+    return english_words
+
 def main():
+
+
     create_db()
     GUI.run_gui()
     return 0
@@ -17,7 +28,6 @@ def create_db() -> None:
     current_dir = os.getcwd()
     parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     pdf_dir = os.path.join(parent_dir, "PDFs")
-
     try:
         os.chdir(os.path.abspath(os.path.join(os.getcwd(), "..")))
         if not os.path.exists("PDFs"):
@@ -59,4 +69,3 @@ class File_Handler:
 
 if __name__ == "__main__":
     main()
-

@@ -65,4 +65,3 @@ def store_pdf(file_path: str) -> None:
 
         connection.commit()
         connection.close()
-

@@ -7,6 +7,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+class API:
+    
+
+
+
 def find_page(question, filter):
     # Filter is an integer which serves as a limit for the amount of documents searched
     # find the best PDFs
@@ -16,8 +21,6 @@ def find_page(question, filter):
         pages = DB.retrieve_pdf(i)
         #print(vf.make_pdf_vector_with_question(pages,question))
         pdf_vectors.append(vf.make_pdf_vector_with_question(pages,question))
-        print(pdf_vectors)
-        print(type(pdf_vectors))
 
     angles = []
 
@@ -26,7 +29,6 @@ def find_page(question, filter):
     del pdf_vectors[-1]
     for pdf_vector in pdf_vectors:
         angles.append(vf.angle_between_vectors(question_vector, pdf_vector))
-    print(angles)
 
     smallest_n = []
     for index, angle in enumerate(angles):
@@ -34,9 +36,13 @@ def find_page(question, filter):
     smallest_n.sort(key=lambda x: x[0])
     smallest_n = smallest_n[:filter]
     # [[angle, id], [angle,id]]
-    print(smallest_n)
 
+    sorted_data = sorted(smallest_n, key=lambda x: x[0])
+    print("sorted error")
+    print(sorted_data)
     # find the best page in each of our best pdfs
+
+
     page_strings = []
     for i in range(0, range(len(smallest_n))):
         pdf_pages = DB.retrieve_pdf(smallest_n[i][1])
@@ -44,11 +50,11 @@ def find_page(question, filter):
 
         page_angles = []
         #find best page vector in pdf by looping through pageVectors, adding the angle to pageAngles
-        for vector in page_vectors:
-            page_angles.append(vf.angle_between_vectors(vector, pageVectors[-1]))
+        for index, vector in enumerate(page_vectors):
+            page_angles.append([vf.angle_between_vectors(vector, pageVectors[-1]), pdf_pages])
 
-        #for angle in page_angles:
-        #
+
+
 
 
 
@@ -95,6 +101,3 @@ def make_prompt_to_chat_gpt(question, page_strings):
     #delete once running
     print(prompt_string)
     return response.choices[0].message.content
-
-
-
