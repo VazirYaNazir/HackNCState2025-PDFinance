@@ -9,16 +9,7 @@ import GUI
 import DB
 
 
-nltk.download('words')
-english_words = list(words.words())
-
-def get_english_words():
-    """BE VERY CAREFUL WITH THIS!!!"""
-    return english_words
-
 def main():
-
-
     create_db()
     GUI.run_gui()
     return 0
@@ -66,6 +57,15 @@ class File_Handler:
         destination_path = os.path.join(pdfs_dir, file_name)
         shutil.move(move_path, destination_path)
         DB.store_pdf(destination_path)
+
+
+nltk.download('words')
+english_words = list(words.words())
+
+def get_english_words():
+    """BE VERY CAREFUL WITH THIS!!!"""
+    return english_words
+
 
 if __name__ == "__main__":
     main()

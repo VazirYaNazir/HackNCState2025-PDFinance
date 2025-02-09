@@ -1,15 +1,13 @@
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
-    QTextEdit, QFileDialog, QSlider, QMessageBox, QScrollArea, QFrame
-)
+    QTextEdit, QFileDialog, QSlider, QMessageBox, QScrollArea, QFrame)
 from PyQt6.QtCore import Qt
 import sys
 import os
 import api
-import main
 
-global_value = 0;
+global_value = 0
 
 class PDFAnalyzerApp(QWidget):
     def __init__(self):
@@ -157,7 +155,7 @@ class PDFAnalyzerApp(QWidget):
         if userInput:
             self.update_output(f"User's Query: {userInput}")
             self.text_entry.clear()
-            self.update_output(api.find_page(userInput, global_value))
+            api.question = userInput
 
     def image_clicked(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select PDF", "", "PDF Files (*.pdf)")
@@ -169,6 +167,7 @@ class PDFAnalyzerApp(QWidget):
             QMessageBox.warning(self, "Error", "File was not uploaded.")
 
     def send_broadness(self):
+        global global_value
         # Send the current broadness slider value to the output box
         value = self.broadness_slider.value()
         global_value = value
@@ -179,9 +178,13 @@ class PDFAnalyzerApp(QWidget):
         self.broadness_slider.setVisible(not self.broadness_slider.isVisible())
         self.send_broadness_button.setVisible(self.broadness_slider.isVisible())
 
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = PDFAnalyzerApp()
-    window.show()
-    sys.exit(app.exec())
+def run_gui():
+    try:
+        app = QApplication.instance()
+        if not app:
+            app = QApplication(sys.argv)
+        window = PDFAnalyzerApp()
+        window.show()
+        app.exec()
+    except Exception as e:
+        print("Fatal Error. Something is going on with the GUI loop")

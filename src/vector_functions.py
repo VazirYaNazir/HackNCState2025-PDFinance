@@ -1,34 +1,28 @@
-from numpy.f2py.auxfuncs import throw_error
 import math as m
-import functools
 import regex as rg
-from typing_extensions import overload
 import main
 from collections import Counter
 
-class VectorFunctions(object):
+class VectorFunctions(list):
     def __init__(self, vector: list[int]):
         self.vector = vector
 
     def calculate_mag(self) -> float:
         _sum_ = 0
-        for i in self.vector:
-            _sum_ = _sum_ + i**2
+        for _ in range(len(self.vector)):
+            _sum_ += self.vector[_] ** 2
         return m.sqrt(_sum_)
 
     def dot_product(self, compare_vector: list[int]) -> float:
-        while True:
-            if len(self.vector) == len(compare_vector):
-                break
+        while len(self.vector) != len(compare_vector):
+            if len(self.vector) > len(compare_vector):
+                compare_vector.append(0)
             else:
-                if len(self.vector) > len(compare_vector):
-                    compare_vector.append(0)
+                self.vector.append(0)
 
-                elif len(self.vector) < len(compare_vector):
-                    self.vector.append(0)
         sum_ = 0
-        for i in compare_vector:
-            sum_ = sum_ + compare_vector[i]*self.vector[i]
+        for i in range(len(compare_vector)):
+            sum_ += compare_vector[i] * self.vector[i]
 
         return sum_
 
@@ -45,18 +39,10 @@ class VectorFunctions(object):
 
 
 class StringFunctions(VectorFunctions):
-    def __init__(self, vector: list[int], pages: list[str], question: str):
+    def __init__(self, vector: list[int],id: int, pages: list[str] ):
         super().__init__(vector)
-        self.question = question
         self.pages = pages
         self.dict_words = {}
-
-    def delete_punctuation(self) -> None:
-        """
-        Removes all regex from self.string_list
-        :return: None
-        """
-        self.pages = [rg.sub(r'[^a-zA-Z]', '', item) for item in self.pages]
 
     def count_words_and_transform_dict(self) -> None:
         """
@@ -64,7 +50,7 @@ class StringFunctions(VectorFunctions):
         is the amount that word is said
         :return:
         """
-        words_found = rg.findall(r'\b[a-zA-Z]+\b', " ".join(self.pages).tolower())
+        words_found = rg.findall(r'\b[a-zA-Z]+\b', " ".join(self.pages).lower())
         word_counts = Counter(words_found)
         self.dict_words = {word: word_counts[word] for word in main.english_words if word in word_counts}
         pass
@@ -75,7 +61,7 @@ class StringFunctions(VectorFunctions):
         # takes in a dictionary with word counts, smth like {cucumber: 2, apple:1, pineapple:3}
         # returns a vector array that puts the word counts from the dictionary in the same format as the word set.
         # ex: [2,1,0,3,0]
-
+        self.count_words_and_transform_dict()
         vector = []
         for value in self.dict_words.values():
             vector.append(value)

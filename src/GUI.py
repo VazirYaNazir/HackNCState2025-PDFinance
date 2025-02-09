@@ -29,6 +29,7 @@ def run_gui() -> None:
             update_output(file_name + " " + "uploaded successfully")
 
     def submit_broadness(value=None):
+        global global_value
         value = broadness_entry.get().strip()
         global_value = value
         if value == "":
@@ -44,7 +45,7 @@ def run_gui() -> None:
         if userInput == "":
             pass
         else:
-            update_output(api.find_page(textEntry.get(), global_value))
+            update_output(api.api_(userInput, global_value))
             textEntry.delete(0,tk.END)
 
     fontName = "Times New Roman"

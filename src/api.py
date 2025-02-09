@@ -1,102 +1,95 @@
+import math
 from PyPDF2.generic import NullObject
 from openai import OpenAI
 import DB
 import os
 import vectorfunctions as vf
 from dotenv import load_dotenv
+from src.DB import retrieve_pdf
 
 load_dotenv()
 
-class API:
-    
+import vector_functions
+import GUIR
 
+question = ""
+limit = GUIR.global_value
 
+def api_(question: str, limit: int) -> str:
+    """
+    Gets ids, stored itter.
+    Gets all pdf ids
+    """
+    question_obj = vector_functions.StringFunctions(pages= [question], vector=[], id=-1)
 
-def find_page(question, filter):
-    # Filter is an integer which serves as a limit for the amount of documents searched
-    # find the best PDFs
-    pdf_vectors = []
+    string_object_list: list[vector_functions.StringFunctions] = []
+    for id_ in range(1, DB.get_last_id()):
+        retrieved_pages = DB.retrieve_pdf(id_)
+        string_object_list.append(vector_functions.StringFunctions(pages=retrieved_pages,vector=[], id=id_))
 
-    for i in range(1,DB.get_last_id()+1):
-        pages = DB.retrieve_pdf(i)
-        #print(vf.make_pdf_vector_with_question(pages,question))
-        pdf_vectors.append(vf.make_pdf_vector_with_question(pages,question))
+    list_of_numerics = []
+    for obj in string_object_list:
+        list_of_numerics.append(obj.create_vector())
 
-    angles = []
+    q_ = question_obj.create_vector()
+    _q = vector_functions.VectorFunctions(vector=[q_])
 
+    list_of_vector_obj: list[vector_functions.VectorFunctions]= []
+    for obj in list_of_numerics:
+        list_of_vector_obj.append(vector_functions.VectorFunctions(vector=obj))
 
-    question_vector = pdf_vectors[-1]
-    del pdf_vectors[-1]
-    for pdf_vector in pdf_vectors:
-        angles.append(vf.angle_between_vectors(question_vector, pdf_vector))
+    list_of_pdf_angles = []
+    for obj in list_of_vector_obj:
+        list_of_pdf_angles.append(obj.calculate_vector_angle(obj.vector, _q.vector))
 
+    print(list_of_pdf_angles)
+
+    # [[angle, id], [angle,id]]
     smallest_n = []
-    for index, angle in enumerate(angles):
+    for index, angle in enumerate(list_of_pdf_angles):
         smallest_n.append([angle,index+1])
     smallest_n.sort(key=lambda x: x[0])
-    smallest_n = smallest_n[:filter]
-    # [[angle, id], [angle,id]]
+    smallest_n = smallest_n[:limit]
 
-    sorted_data = sorted(smallest_n, key=lambda x: x[0])
-    print("sorted error")
-    print(sorted_data)
-    # find the best page in each of our best pdfs
+    output_pages = []
+    for pair in smallest_n:
+        list_of_page_angles = []
+        pages = retrieve_pdf(pair[1])
+        for page in pages:
+            pageObj = vector_functions.StringFunctions(pages=[page], vector = [], id = 0)
+            pageObj.vector = pageObj.create_vector()
+            angle = vector_functions.VectorFunctions.calculate_vector_angle(pageObj, _q)
+            list_of_page_angles.append([angle, page])
 
+        list_of_page_angles.sort(key = lambda x : x[0])
+        list_of_page_angles = list_of_pdf_angles[:limit]
 
-    page_strings = []
-    for i in range(0, range(len(smallest_n))):
-        pdf_pages = DB.retrieve_pdf(smallest_n[i][1])
-        page_vectors = vf.make_page_vectors(PDFpages, question)
-
-        page_angles = []
-        #find best page vector in pdf by looping through pageVectors, adding the angle to pageAngles
-        for index, vector in enumerate(page_vectors):
-            page_angles.append([vf.angle_between_vectors(vector, pageVectors[-1]), pdf_pages])
-
+        for page in range(limit):
+            output_pages.append(page[1])
 
 
 
+    # Ensure API key is set
+    api_key = os.getenv("OPEN_AI_API_KEY")
+    if not api_key:
+        raise ValueError("Missing OpenAI API key. Set it as an environment variable.")
 
+    client = OpenAI(api_key=api_key)
 
+    # Efficiently join context strings
+    context_string = "".join(output_pages)
 
-    """
-    for pdf_id in range(1, len(smallest_n)):
-        best_pdf_pages = DB.retrieve_pdf(pdf_id)
-        page_vectors = vf.make_page_vectors(best_pdf_pages, question)
-        question_vector = page_vectors.pop()
-        page_angles = []
-        for page_vector in page_vectors:
-            page_angles.append(vf.angle_between_vectors(page_vector, question_vector))
+    # Construct prompt
+    prompt_string = f"{question}\nAnswer the question above with the following context:\n{context_string}"
 
-        smallest_j = []
-        for index, angle in enumerate(angles):
-            smallest_j.append([angle, index + 1])
-        smallest_j.sort(key=lambda x: x[0])
-        smallest_j = smallest_j[:filter]
-
-        for id in smallest_n[1]:
-            pdf = DB.retrieve_pdf(id)
-            page_strings.append(pdf[smallest_j[1]])
-
-    return make_prompt_to_chat_gpt(question, page_strings)
-    """
-
-def make_prompt_to_chat_gpt(question, page_strings):
-    client = OpenAI(api_key=os.getenv("OPEN_AI_API_KEY"), base_url=os.getenv("OPEN_AI_URL"))
-
-    context_string = ""
-    for i in page_strings:
-        context_string += i
-
-    prompt_string = f"{question}\nAnswer the question above with the following context:\n {context_string}"
-
+    # Make API call
     response = client.chat.completions.create(
-    model="chatgpt-4o-latest",
-    messages=[
-        {"role": "system", "content": "You are a helpful financial assistant"},
-        {"role": "user", "content": prompt_string},
-    ],
-    stream=False
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful financial assistant."},
+            {"role": "user", "content": prompt_string},
+        ],
+        stream=False
     )
     #delete once running
     print(prompt_string)
